@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickMail - Temporary Email Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        dark: '#1F2937',
+                        light: '#F9FAFB'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .email-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .copy-btn:hover .copy-icon {
+            opacity: 1;
+        }
+        .email-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .email-content.expanded {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4F46E5 0%, #10B981 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-envelope text-2xl"></i>
+                    <h1 class="text-2xl font-bold">QuickMail</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#" class="hover:text-gray-200 transition">Home</a>
+                    <a href="#" class="hover:text-gray-200 transition">Features</a>
+                    <a href="#" class="hover:text-gray-200 transition">FAQ</a>
+                    <a href="#" class="hover:text-gray-200 transition">API</a>
+                </nav>
+                <button class="md:hidden text-xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Disposable Temporary Email</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+                Protect your privacy with our free temporary email service. No registration required!
+            </p>
+            
+            <!-- Email Generator -->
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="email-address" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                placeholder="Generating email..."
+                                readonly
+                            >
+                            <button 
+                                id="copy-btn" 
+                                class="copy-btn absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-100 hover:bg-gray-200 p-2 rounded-md transition"
+                                title="Copy to clipboard"
+                            >
+                                <i class="fas fa-copy copy-icon opacity-70 hover:opacity-100 transition"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button 
+                        id="generate-btn" 
+                        class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                    >
+                        <i class="fas fa-sync-alt"></i>
+                        Generate New
+                    </button>
+                </div>
+                
+                <div class="mt-6 flex flex-wrap gap-3 justify-center">
+                    <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        <i class="fas fa-clock"></i>
+                        <span>Expires in 1 hour</span>
+                    </div>
+                    <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        <i class="fas fa-envelope"></i>
+                        <span>10 emails allowed</span>
+                    </div>
+                    <div class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>No tracking</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Email Inbox -->
+        <section class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-semibold text-gray-800">Your Inbox</h3>
+                <button id="refresh-btn" class="text-primary hover:text-primary-dark flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+            
+            <div id="inbox-container" class="space-y-4">
+                <!-- Email items will be added here dynamically -->
+                <div class="text-center py-12 text-gray-500" id="empty-inbox">
+                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                    <p>Your inbox is empty. Share your temporary email to receive messages.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Features Section -->
+    <section class="bg-gray-100 py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Why Choose QuickMail?</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+                    <div class="text-primary text-4xl mb-4">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Privacy Protection</h3>
+                    <p class="text-gray-600">Keep your personal email safe from spam and phishing attempts by using our disposable addresses.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+                    <div class="text-primary text-4xl mb-4">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Instant Setup</h3>
+                    <p class="text-gray-600">No registration required. Get a temporary email address instantly with one click.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+                    <div class="text-primary text-4xl mb-4">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Developer Friendly</h3>
+                    <p class="text-gray-600">Simple API for integration with your applications and automated testing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-xl font-bold mb-4">QuickMail</h4>
+                    <p class="text-gray-400">The fastest way to get a disposable email address for your temporary needs.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">API Documentation</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Status</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition text-xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition text-xl"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition text-xl"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 QuickMail. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Email Detail Modal -->
+    <div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 id="email-subject" class="text-xl font-bold"></h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500">From</p>
+                        <p id="email-from" class="font-medium"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">To</p>
+                        <p id="email-to" class="font-medium"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date</p>
+                        <p id="email-date" class="font-medium"></p>
+                    </div>
+                </div>
+                <div id="email-body" class="prose max-w-none border-t pt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const emailAddressInput = document.getElementById('email-address');
+        const generateBtn = document.getElementById('generate-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const inboxContainer = document.getElementById('inbox-container');
+        const emptyInbox = document.getElementById('empty-inbox');
+        const emailModal = document.getElementById('email-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        // Generate random email
+        function generateRandomEmail() {
+            const domains = ['quickmail.com', 'tempmail.net', 'maildrop.cc', 'mailinator.com'];
+            const randomString = Math.random().toString(36).substring(2, 10);
+            const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+            return `${randomString}@${randomDomain}`;
+        }
+
+        // Generate initial email
+        emailAddressInput.value = generateRandomEmail();
+
+        // Event Listeners
+        generateBtn.addEventListener('click', () => {
+            emailAddressInput.value = generateRandomEmail();
+            // Clear inbox when new email is generated
+            inboxContainer.innerHTML = emptyInbox.outerHTML;
+        });
+
+        copyBtn.addEventListener('click', () => {
+            emailAddressInput.select();
+            document.execCommand('copy');
+            
+            // Show copied feedback
+            const originalIcon = copyBtn.querySelector('i');
+            const originalText = originalIcon.className;
+            
+            originalIcon.className = 'fas fa-check';
+            copyBtn.setAttribute('title', 'Copied!');
+            
+            setTimeout(() => {
+                originalIcon.className = originalText;
+                copyBtn.setAttribute('title', 'Copy to clipboard');
+            }, 2000);
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            // Simulate loading
+            refreshBtn.querySelector('i').classList.add('animate-spin');
+            
+            // Simulate API call with timeout
+            setTimeout(() => {
+                refreshBtn.querySelector('i').classList.remove('animate-spin');
+                fetchEmails();
+            }, 1000);
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            emailModal.classList.add('hidden');
+        });
+
+        // Mock email data
+        const mockEmails = [
+            {
+                id: '1',
+                from: 'no-reply@example.com',
+                subject: 'Welcome to Our Service!',
+                date: 'Just now',
+                preview: 'Thank you for signing up to our service. Please verify your email address...',
+                body: `<p>Dear User,</p>
+                    <p>Thank you for signing up to our service. To complete your registration, please verify your email address by clicking the link below:</p>
+                    <p><a href="#" class="text-primary hover:underline">Verify Email Address</a></p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                    <p>Best regards,<br>The Example Team</p>`
+            },
+            {
+                id: '2',
+                from: 'newsletter@tech.com',
+                subject: 'This Week in Tech: Latest Updates',
+                date: '5 minutes ago',
+                preview: 'Here are the biggest technology news of the week. AI advancements, new product launches...',
+                body: `<h2>This Week in Technology</h2>
+                    <p>Here are the most important updates from the tech world this week:</p>
+                    <h3>1. AI Breakthroughs</h3>
+                    <p>Researchers have developed a new AI model that can predict weather patterns with 95% accuracy...</p>
+                    <h3>2. Product Launches</h3>
+                    <p>Tech giant XYZ announced their new smartphone lineup featuring revolutionary camera technology...</p>
+                    <p>Read more on our <a href="#" class="text-primary hover:underline">website</a>.</p>`
+            },
+            {
+                id: '3',
+                from: 'support@service.com',
+                subject: 'Your subscription is expiring soon',
+                date: '1 hour ago',
+                preview: 'Your premium subscription will expire in 7 days. Renew now to avoid interruption...',
+                body: `<p>Hello,</p>
+                    <p>We noticed that your premium subscription will expire in 7 days. To continue enjoying all the benefits without interruption, please renew your subscription.</p>
+                    <p><strong>Special offer:</strong> Renew now and get 20% discount for the next 6 months!</p>
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg mt-4">Renew Subscription</button>
+                    <p class="mt-4">If you have any questions, please contact our support team.</p>`
+            }
+        ];
+
+        // Fetch emails (mock implementation)
+        function fetchEmails() {
+            // In a real app, this would be an API call
+            if (Math.random() > 0.3) { // 70% chance to get emails
+                emptyInbox.classList.add('hidden');
+                
+                // Clear existing emails
+                inboxContainer.innerHTML = '';
+                
+                // Add mock emails
+                mockEmails.forEach(email => {
+                    const emailElement = document.createElement('div');
+                    emailElement.className = 'email-item bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition cursor-pointer';
+                    emailElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-semibold text-gray-800 truncate">${email.subject}</h4>
+                                <p class="text-sm text-gray-600 truncate">From: ${email.from}</p>
+                            </div>
+                            <span class="text-xs text-gray-500 whitespace-nowrap ml-2">${email.date}</span>
+                        </div>
+                        <p class="text-gray-600 mt-2 text-sm">${email.preview}</p>
+                        <div class="email-content mt-2 text-sm text-gray-700"></div>
+                    `;
+                    
+                    emailElement.addEventListener('click', () => {
+                        openEmailModal(email);
+                    });
+                    
+                    inboxContainer.appendChild(emailElement);
+                });
+            } else {
+                emptyInbox.classList.remove('hidden');
+            }
+        }
+
+        // Open email modal
+        function openEmailModal(email) {
+            document.getElementById('email-subject').textContent = email.subject;
+            document.getElementById('email-from').textContent = email.from;
+            document.getElementById('email-to').textContent = emailAddressInput.value;
+            document.getElementById('email-date').textContent = email.date;
+            document.getElementById('email-body').innerHTML = email.body;
+            
+            emailModal.classList.remove('hidden');
+        }
+
+        // Initial fetch
+        fetchEmails();
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=hgdjh/notyetyash" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
